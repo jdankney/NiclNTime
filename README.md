@@ -19,7 +19,7 @@ NiclNTime is an educational web app for anyone curious about what their nicotine
 | --- | --- |
 | Relative risk gauge, animated respiratory view, financial breakdown and time-impact widgets. | Side-by-side scenarios for cutting down, quitting one habit, or quitting entirely. |
 
-> Add a screenshot or short GIF here before sharing widely. The app is fully responsive and works on mobile, tablet and desktop.
+The app is fully responsive and works on mobile, tablet and desktop. Screenshots can be added here once the public deployment is live.
 
 ---
 
