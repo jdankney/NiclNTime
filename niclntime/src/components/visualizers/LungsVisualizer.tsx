@@ -85,21 +85,6 @@ export function LungsVisualizer({ metrics }: LungsVisualizerProps) {
                   </clipPath>
                 </defs>
 
-                <path
-                  d="M116 26h8v46h-8z"
-                  fill={status.stroke}
-                  opacity="0.45"
-                  rx="4"
-                />
-                <path
-                  d="M120 68 88 94M120 68l32 26"
-                  fill="none"
-                  stroke={status.stroke}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  opacity="0.45"
-                />
-
                 <g filter="url(#lung-soft-glow)" opacity="0.55">
                   <path
                     d="M112 78 C95 60 68 58 52 74 C34 92 26 124 32 158 C37 188 56 206 80 204 C103 202 112 181 112 154 Z"

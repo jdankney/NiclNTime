@@ -743,21 +743,25 @@ function WhatIfCard({
       )}
 
       <div className="mt-4 space-y-2">
-        <DeltaRow label="Risk score" value={isBaseline ? `${scenario.metrics.riskScore}/100` : `${scenario.metrics.riskScore}/100`} change={isBaseline ? undefined : `-${riskChange} pts`} />
+        <DeltaRow
+          label="Risk score"
+          value={`${scenario.metrics.riskScore}/100`}
+          change={!isBaseline && riskChange > 0 ? `-${riskChange} pts` : undefined}
+        />
         <DeltaRow
           label="Nicotine / day"
           value={`${formatNumber(scenario.metrics.dailyNicotineMg, 1)} mg`}
-          change={isBaseline ? undefined : `-${formatNumber(nicotineChange, 1)} mg`}
+          change={!isBaseline && nicotineChange > 0 ? `-${formatNumber(nicotineChange, 1)} mg` : undefined}
         />
         <DeltaRow
           label="Time / day"
           value={formatDuration(scenario.metrics.minutesPerDaySpent)}
-          change={isBaseline ? undefined : `-${formatDuration(timeChange)}`}
+          change={!isBaseline && timeChange > 0 ? `-${formatDuration(timeChange)}` : undefined}
         />
         <DeltaRow
           label="Life lost est."
           value={`${formatNumber(scenario.metrics.daysOfLifeLostEstimate)} days`}
-          change={isBaseline ? undefined : `-${formatNumber(lifeChange)} days`}
+          change={!isBaseline && lifeChange > 0 ? `-${formatNumber(lifeChange)} days` : undefined}
         />
       </div>
     </div>
@@ -770,7 +774,7 @@ function DeltaRow({ label, value, change }: { label: string; value: string; chan
       <span className="text-zinc-500">{label}</span>
       <div className="flex items-center gap-2">
         <span className="font-mono text-zinc-200">{value}</span>
-        {change && change !== '-0' && change !== '-0.0 mg' && change !== '-0m' && change !== '-0 days' && (
+        {change && (
           <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-300">
             {change}
           </span>
