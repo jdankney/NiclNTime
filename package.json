@@ -1,0 +1,19 @@
+{
+  "name": "niclntime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A private, browser-based visualizer for the health, financial and time impact of nicotine use.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "setup": "npm --prefix niclntime install",
+    "dev": "npm --prefix niclntime run dev",
+    "build": "npm --prefix niclntime run build",
+    "start": "npm --prefix niclntime run start",
+    "lint": "npm --prefix niclntime run lint",
+    "typecheck": "npm --prefix niclntime run typecheck",
+    "check": "npm run lint && npm run typecheck && npm run build"
+  }
+}
