@@ -12,8 +12,16 @@ import {
 const ASSUMPTIONS: Array<{ topic: string; value: string; why: string; color: string }> = [
   {
     topic: 'Vape nicotine absorbed',
-    value: `${Math.round(VAPE_NICOTINE_ABSORPTION * 100)}% of the nicotine in the liquid you use`,
-    why: 'About 94% of nicotine that reaches the lungs is retained, but some condenses in the device or is exhaled. Real values range roughly 30–90% depending on device and puffing style.',
+    value: `~${Math.round(VAPE_NICOTINE_ABSORPTION.salt * 100)}% for nicotine salts, ~${Math.round(
+      VAPE_NICOTINE_ABSORPTION.freebase * 100
+    )}% for freebase, of the nicotine in the liquid you use`,
+    why: 'About 94% of nicotine that reaches the lungs is retained, but some condenses in the device or is exhaled. Real values range roughly 30–70% depending on device and puffing style.',
+    color: 'bg-cyan-400',
+  },
+  {
+    topic: 'Salt vs freebase',
+    value: 'A modest ±5-point adjustment; strength matters far more',
+    why: 'Salts (nicotine plus a mild acid such as benzoic acid) reach the blood faster with a higher, cigarette-like peak, and studies find somewhat higher uptake than freebase at the same strength. Their bigger effect is making 35–59 mg/mL strengths smooth enough to vape. How much total daily absorption differs isn’t well established, so the adjustment is kept small.',
     color: 'bg-cyan-400',
   },
   {
@@ -86,6 +94,11 @@ const SOURCES = [
     title: 'St Helen et al. — Nicotine delivery and retention from e-cigarettes (Addiction, 2016)',
     url: 'https://pubmed.ncbi.nlm.nih.gov/26430813/',
     note: 'Retention of inhaled e-cigarette nicotine.',
+  },
+  {
+    title: 'Pharmacokinetics of nicotine salt vs freebase e-liquids (Scientific Reports, 2020)',
+    url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7686355/',
+    note: 'Salt e-liquids gave higher, faster nicotine uptake than freebase at the same strength.',
   },
   {
     title: 'Lunell et al. — Nicotine extraction and pharmacokinetics of ZYN pouches (Nicotine Tob Res, 2020)',

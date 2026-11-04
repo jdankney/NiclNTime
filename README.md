@@ -146,7 +146,7 @@ NiclNTime/
 | Refillable pod / AIO | Caliburn, XROS, Vinci + nic-salt bottle | 70 mL | ~150 |
 | Sub-ohm tank / mod | Tanks and rebuildables + freebase bottle | 200 mL | ~40 |
 
-All vapes use one central estimate: **~50% of the nicotine in the liquid you use reaches your bloodstream** (plausible range 30–70%). Device category only affects inhaled volume, time spent and the suggested puff count.
+**Nicotine absorbed:** ~55% of the nicotine in the liquid you use for **nicotine salts** and ~45% for **freebase** (plausible range 30–70% either way). Salts reach the blood faster with a higher, cigarette-like peak and give somewhat higher uptake at the same strength. Their bigger effect is making 35–59 mg/mL strengths smooth enough to vape, and strength is already in the maths, so the salt/freebase adjustment is kept small. Presets set the type automatically (disposables and pods → salt, sub-ohm tanks → freebase), and it can be changed under *Fine-tune*. Device category only affects inhaled volume, time spent and the suggested puff count.
 
 \* Typical values from puff-topography studies. Manufacturer puff ratings (e.g. "25k puffs") are measured with short lab puffs, so the app works from liquid used instead.
 

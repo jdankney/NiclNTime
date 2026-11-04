@@ -10,6 +10,7 @@ import {
   EXAMPLE_INPUTS,
   CURRENCIES,
   VAPE_PRODUCTS,
+  NICOTINE_TYPE_INFO,
   POUCH_PRODUCTS,
   CIGARETTE_TYPE_LABELS,
   type UserInputs,
@@ -836,7 +837,7 @@ function describeVaping(vaping: NonNullable<UserInputs['vaping']>): string {
   const days = vaping.volumePerDay > 0 ? vaping.unitSizeMl / vaping.volumePerDay : 0;
   return [
     product ? product.name : DEVICE_PROFILES[vaping.deviceType].label,
-    `${formatFlexible(vaping.nicotineConcentration, 1)} mg/mL (${formatFlexible(vaping.nicotineConcentration / 10, 1)}%)`,
+    `${formatFlexible(vaping.nicotineConcentration, 1)} mg/mL (${formatFlexible(vaping.nicotineConcentration / 10, 1)}%) ${NICOTINE_TYPE_INFO[vaping.nicotineType].label.toLowerCase()}`,
     `one ${formatFlexible(vaping.unitSizeMl, 1)} mL ${unit} every ${formatFlexible(days, 1)} days`,
     `${formatFlexible(vaping.volumePerDay, 2)} mL/day`,
     `~${vaping.hitsPerDay} puffs/day`,
