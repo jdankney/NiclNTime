@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { CalculatedMetrics, CurrencyCode } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { formatCurrency, formatNumber } from '@/lib/calculations';
+import { formatCurrency, formatLifeLost, formatNumber } from '@/lib/calculations';
 
 interface ClockVisualizerProps {
   metrics: CalculatedMetrics;
@@ -59,17 +59,21 @@ export function ClockVisualizer({ metrics, currency }: ClockVisualizerProps) {
           />
           <div className="flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/[0.05] p-4 text-center">
             <div className="relative grid h-24 w-24 place-items-center rounded-full border-4 border-red-500/25">
-              <div className="absolute inset-[-4px] rounded-full border-4 border-transparent border-t-red-400/70 animate-[spin_8s_linear_infinite]" />
+              <div className="absolute inset-[-4px] rounded-full border-4 border-transparent border-t-red-400/70 motion-safe:animate-[spin_8s_linear_infinite]" />
               <div>
                 <div className="font-mono text-2xl font-bold text-red-300">
-                  {formatNumber(metrics.daysOfLifeLostEstimate)}
+                  {metrics.lifeLostApplies ? formatNumber(metrics.daysLostPerYear) : '?'}
                 </div>
-                <div className="text-[10px] uppercase tracking-wide text-zinc-500">days est.</div>
+                <div className="text-[10px] uppercase tracking-wide text-zinc-500">
+                  {metrics.lifeLostApplies ? 'days / year' : 'unknown'}
+                </div>
               </div>
             </div>
-            <div className="mt-3 text-xs font-medium text-zinc-300">Estimated life lost</div>
+            <div className="mt-3 text-xs font-medium text-zinc-300">Life expectancy lost</div>
             <div className="mt-1 text-[10px] leading-relaxed text-zinc-600">
-              ~11 min per cigarette-equivalent, across {formatNumber(metrics.yearsOfLifeLostEstimate, 1)} years
+              {metrics.lifeLostApplies
+                ? `≈20 min per cigarette (UCL, 2025) · ${formatLifeLost(metrics.daysOfLifeLostEstimate)} so far`
+                : 'No long-term data yet for vaping or pouches'}
             </div>
           </div>
         </div>
@@ -150,8 +154,9 @@ export function ClockVisualizer({ metrics, currency }: ClockVisualizerProps) {
         </div>
 
         <p className="mt-4 text-[10px] leading-relaxed text-zinc-600">
-          Time-per-use figures are averages. The yearly total assumes every day matches your current
-          routine, including weekends and holidays.
+          Time assumes ~3 seconds per puff and ~6 minutes per cigarette; pouches aren’t counted because
+          they don’t interrupt what you’re doing. Life expectancy is shown for smoking only — it’s the
+          one with decades of mortality data. Quitting at any age wins back most of it.
         </p>
       </CardContent>
     </Card>

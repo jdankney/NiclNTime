@@ -3,7 +3,7 @@
 import { CalculatedMetrics, CurrencyCode } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { formatCurrency } from '@/lib/calculations';
+import { formatCurrency, formatNumber, RISK_FACTOR_WEIGHTS } from '@/lib/calculations';
 
 interface RiskGaugeProps {
   metrics: CalculatedMetrics;
@@ -51,12 +51,12 @@ const FACTOR_META: Array<{
   detail: string;
   color: string;
 }> = [
+  { key: 'chemicals', label: 'Smoke toxicants', detail: 'Tar, CO & combustion chemicals', color: 'bg-amber-400' },
   { key: 'nicotine', label: 'Nicotine dose', detail: 'Absorbed mg/day', color: 'bg-cyan-400' },
-  { key: 'chemicals', label: 'Chemical exposure', detail: 'Tar + carbon monoxide', color: 'bg-amber-400' },
-  { key: 'respiratory', label: 'Respiratory volume', detail: 'Aerosol / smoke inhaled', color: 'bg-purple-400' },
-  { key: 'cardiovascular', label: 'Cardiovascular load', detail: 'Estimated heart-rate impact', color: 'bg-red-400' },
-  { key: 'duration', label: 'Duration of use', detail: 'Years of exposure', color: 'bg-orange-400' },
-  { key: 'age', label: 'Age weighting', detail: 'Longer exposure window', color: 'bg-blue-400' },
+  { key: 'respiratory', label: 'Inhaled load', detail: 'Smoke + vapor (vapor weighted lower)', color: 'bg-purple-400' },
+  { key: 'cardiovascular', label: 'Heart & blood pressure', detail: 'Nicotine’s heart-rate effect', color: 'bg-red-400' },
+  { key: 'duration', label: 'Years of use', detail: 'Longer use, more cumulative harm', color: 'bg-orange-400' },
+  { key: 'age', label: 'Developing brain', detail: 'Extra weight under age 25', color: 'bg-blue-400' },
 ];
 
 export function RiskGauge({ metrics, currency }: RiskGaugeProps) {
@@ -152,7 +152,7 @@ export function RiskGauge({ metrics, currency }: RiskGaugeProps) {
 
             <div className="mt-5 grid grid-cols-2 gap-2">
               <MiniMetric label="Nicotine" value={`${metrics.dailyNicotineMg.toFixed(1)} mg`} />
-              <MiniMetric label="Cardio" value={`+${metrics.heartRateIncreaseBpm.toFixed(0)} bpm`} />
+              <MiniMetric label="Heart rate" value={`+${metrics.heartRateIncreaseBpm.toFixed(0)} bpm`} />
               <MiniMetric label="Inhaled" value={`${metrics.dailyAerosolVolumeLiters.toFixed(1)} L`} />
               <MiniMetric label="Spend" value={formatCurrency(metrics.dailyCost, currency)} />
             </div>
@@ -165,28 +165,35 @@ export function RiskGauge({ metrics, currency }: RiskGaugeProps) {
               <Icon name="alert" size={14} />
               Cigarette-specific exposure
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-zinc-400">
+            <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-zinc-400">
               <span>
                 Tar: <strong className="font-mono text-zinc-200">{metrics.dailyTarMg.toFixed(0)} mg/day</strong>
               </span>
               <span>
                 CO: <strong className="font-mono text-zinc-200">{metrics.dailyCarbonMonoxideMg.toFixed(0)} mg/day</strong>
               </span>
+              <span>
+                <strong className="font-mono text-zinc-200">{formatNumber(metrics.packYears, 1)}</strong> pack-years
+              </span>
             </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+              There’s no safe level of smoking: even one cigarette a day carries around half the heart-disease
+              risk of a pack a day.
+            </p>
           </div>
         )}
 
         <div className="mt-6 border-t border-zinc-800/80 pt-5">
           <div className="mb-3 flex items-center justify-between">
             <h4 className="text-sm font-medium text-zinc-200">Score breakdown</h4>
-            <span className="text-[10px] uppercase tracking-wide text-zinc-600">0–100 each</span>
+            <span className="text-[10px] uppercase tracking-wide text-zinc-600">% of each factor’s max</span>
           </div>
           <div className="space-y-2.5">
             {FACTOR_META.map((factor) => (
               <FactorBar
                 key={factor.key}
                 label={factor.label}
-                detail={factor.detail}
+                detail={`${factor.detail} · up to ${RISK_FACTOR_WEIGHTS[factor.key]} pts`}
                 value={metrics.riskFactors[factor.key]}
                 color={factor.color}
               />
@@ -195,8 +202,9 @@ export function RiskGauge({ metrics, currency }: RiskGaugeProps) {
         </div>
 
         <p className="mt-5 text-[11px] leading-relaxed text-zinc-600">
-          The score is a communication aid built from population-level estimates. It is not a diagnosis,
-          a measure of lung function, or a prediction of your personal health outcomes.
+          The score is a communication aid built from population-level estimates, weighted so that
+          smoking — by far the most harmful way to use nicotine — dominates. It is not a diagnosis or a
+          prediction of your personal health outcomes.
         </p>
       </CardContent>
     </Card>

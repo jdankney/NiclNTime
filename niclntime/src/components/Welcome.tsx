@@ -12,19 +12,19 @@ const FEATURES = [
   {
     icon: 'shield' as const,
     title: 'Relative risk, explained',
-    description: 'See which inputs drive your score — nicotine, chemicals, inhaled volume and more.',
+    description: 'See which inputs drive your score — smoke, nicotine, inhaled vapor and more.',
     color: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20',
   },
   {
     icon: 'wallet' as const,
     title: 'The real cost',
-    description: 'Daily, monthly and long-term spending, plus what the same money could become.',
+    description: 'Just tell us how long a device lasts and what you pay — we do the maths.',
     color: 'text-amber-300 bg-amber-500/10 border-amber-500/20',
   },
   {
     icon: 'clock' as const,
     title: 'Time you do not get back',
-    description: 'Turn puffs and cigarettes into hours, work weeks, films and estimated life lost.',
+    description: 'Hours spent each year, plus the life expectancy smoking takes (≈20 min a cigarette).',
     color: 'text-blue-300 bg-blue-500/10 border-blue-500/20',
   },
   {
@@ -60,8 +60,9 @@ export function Welcome({ onStart, onDemo }: WelcomeProps) {
             .
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-zinc-400 sm:text-lg">
-            Turn puffs and cigarettes into a clear picture of nicotine exposure, money spent and time
-            lost — then compare what changes if you cut down or quit.
+            Geek Bar, Raz, JUUL, ZYN, cigarettes — or a mix. Pick what you use, say how long it lasts,
+            and get a clear picture of nicotine, money and time. Then see what changes if you cut down or
+            quit.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -94,7 +95,7 @@ export function Welcome({ onStart, onDemo }: WelcomeProps) {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Icon name="check" size={13} className="text-emerald-400" />
-              Takes about 2 minutes
+              Takes about a minute
             </span>
           </div>
         </div>
@@ -115,7 +116,7 @@ export function Welcome({ onStart, onDemo }: WelcomeProps) {
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Stat label="Inputs" value="Vaping + cigarettes" detail="Use one or both, in any combination." />
+        <Stat label="Products" value="Vapes, cigarettes, pouches" detail="Popular devices pre-filled — Geek Bar, Raz, Elf Bar, JUUL, ZYN…" />
         <Stat label="Currencies" value="40+ supported" detail="Enter costs in your local currency." />
         <Stat label="Scenarios" value="Cut down → quit" detail="Compare realistic changes side by side." />
       </div>
