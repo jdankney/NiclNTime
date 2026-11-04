@@ -1,13 +1,15 @@
 'use client';
 
-import { CalculatedMetrics, CurrencyCode } from '@/types';
+import { CURRENCIES, LIFE_EXPECTANCY_YEARS, type CalculatedMetrics, type CurrencyCode } from '@/types';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Icon, IconName } from '@/components/ui/Icon';
 import {
   formatCurrency,
   formatCompactCurrency,
   formatDuration,
+  formatLifeLost,
   formatNumber,
+  VAPE_AEROSOL_RESPIRATORY_WEIGHT,
 } from '@/lib/calculations';
 
 interface SummaryCardProps {
@@ -15,7 +17,7 @@ interface SummaryCardProps {
   currency: CurrencyCode;
 }
 
-type Trend = 'low' | 'moderate' | 'high';
+type Trend = 'low' | 'moderate' | 'high' | 'unknown';
 
 interface SummaryCard {
   label: string;
@@ -46,39 +48,44 @@ const TREND_STYLES: Record<Trend, { dot: string; label: string; text: string }> 
   low: { dot: 'bg-emerald-400', label: 'Lower', text: 'text-emerald-400' },
   moderate: { dot: 'bg-amber-400', label: 'Moderate', text: 'text-amber-400' },
   high: { dot: 'bg-red-400', label: 'Higher', text: 'text-red-400' },
+  unknown: { dot: 'bg-zinc-500', label: 'Unknown', text: 'text-zinc-400' },
 };
 
+const band = (value: number, moderate: number, high: number): Trend =>
+  value > high ? 'high' : value > moderate ? 'moderate' : 'low';
+
 export function SummaryCards({ metrics, currency }: SummaryCardProps) {
+  // Cost bands are defined in USD and scaled to the selected currency.
+  const fx = CURRENCIES[currency].perUsd;
+  const inhaledParts = [
+    metrics.dailySmokeVolumeLiters > 0 && `${formatNumber(metrics.dailySmokeVolumeLiters, 1)} L smoke`,
+    metrics.dailyVapeAerosolLiters > 0 && `${formatNumber(metrics.dailyVapeAerosolLiters, 1)} L vapor`,
+  ].filter(Boolean);
+
   const cards: SummaryCard[] = [
     {
-      label: 'Nicotine / day',
+      label: 'Nicotine absorbed / day',
       value: `${formatNumber(metrics.dailyNicotineMg, 1)} mg`,
-      detail: `≈ ${formatNumber(metrics.dailyCigaretteEquivalent, 1)} cigarette equivalents`,
+      detail: `≈ ${formatNumber(metrics.dailyCigaretteEquivalent, 0)} cigarettes’ worth of nicotine`,
       icon: 'sparkles',
       color: 'cyan',
-      trend: metrics.dailyNicotineMg > 40 ? 'high' : metrics.dailyNicotineMg > 15 ? 'moderate' : 'low',
+      trend: band(metrics.dailyNicotineMg, 10, 30),
     },
     {
-      label: 'Aerosol / smoke',
+      label: 'Inhaled / day',
       value: `${formatNumber(metrics.dailyAerosolVolumeLiters, 1)} L`,
-      detail: 'Estimated volume inhaled per day',
+      detail: inhaledParts.length > 0 ? inhaledParts.join(' + ') : 'Nothing inhaled — pouches only',
       icon: 'wind',
       color: 'purple',
-      trend:
-        metrics.dailyAerosolVolumeLiters > 10
-          ? 'high'
-          : metrics.dailyAerosolVolumeLiters > 4
-            ? 'moderate'
-            : 'low',
+      trend: band(metrics.dailySmokeVolumeLiters + metrics.dailyVapeAerosolLiters * VAPE_AEROSOL_RESPIRATORY_WEIGHT, 3, 8),
     },
     {
-      label: 'Heart rate impact',
+      label: 'Heart rate',
       value: `+${formatNumber(metrics.heartRateIncreaseBpm, 0)} bpm`,
-      detail: 'Rough peak estimate, not a measurement',
+      detail: 'Estimated average daytime rise from nicotine',
       icon: 'heart',
       color: 'red',
-      trend:
-        metrics.heartRateIncreaseBpm > 20 ? 'high' : metrics.heartRateIncreaseBpm > 10 ? 'moderate' : 'low',
+      trend: band(metrics.heartRateIncreaseBpm, 4, 7),
     },
     {
       label: 'Monthly cost',
@@ -86,7 +93,7 @@ export function SummaryCards({ metrics, currency }: SummaryCardProps) {
       detail: `${formatCurrency(metrics.dailyCost, currency)} per day`,
       icon: 'wallet',
       color: 'amber',
-      trend: metrics.monthlyCost > 300 ? 'high' : metrics.monthlyCost > 100 ? 'moderate' : 'low',
+      trend: band(metrics.monthlyCost / fx, 100, 300),
     },
     {
       label: 'Yearly cost',
@@ -94,38 +101,41 @@ export function SummaryCards({ metrics, currency }: SummaryCardProps) {
       detail: `${formatCompactCurrency(metrics.tenYearCost, currency)} over 10 years`,
       icon: 'activity',
       color: 'orange',
-      trend: metrics.yearlyCost > 3000 ? 'high' : metrics.yearlyCost > 1000 ? 'moderate' : 'low',
+      trend: band(metrics.yearlyCost / fx, 1200, 3600),
     },
     {
-      label: `Cost until 80`,
+      label: `Cost until age ${LIFE_EXPECTANCY_YEARS}`,
       value: formatCompactCurrency(metrics.lifetimeCost, currency),
-      detail: `Projected over ${metrics.projectionYears} years`,
+      detail: `If you keep going for ${metrics.projectionYears} more years`,
       icon: 'shield',
       color: 'purple',
-      trend: metrics.lifetimeCost > 100000 ? 'high' : metrics.lifetimeCost > 50000 ? 'moderate' : 'low',
+      trend: band(metrics.lifetimeCost / fx, 50000, 100000),
     },
     {
       label: 'Time / day',
       value: formatDuration(metrics.minutesPerDaySpent),
-      detail: `${formatNumber(metrics.hoursPerYearSpent, 0)} hours per year`,
+      detail: `${formatNumber(metrics.hoursPerYearSpent, 0)} hours per year actively using`,
       icon: 'clock',
       color: 'blue',
-      trend:
-        metrics.minutesPerDaySpent > 60 ? 'high' : metrics.minutesPerDaySpent > 30 ? 'moderate' : 'low',
+      trend: band(metrics.minutesPerDaySpent, 30, 60),
     },
-    {
-      label: 'Life lost estimate',
-      value: `${formatNumber(metrics.daysOfLifeLostEstimate)} days`,
-      detail: 'Statistical estimate across your years of use',
-      icon: 'alert',
-      color: 'red',
-      trend:
-        metrics.daysOfLifeLostEstimate > 365
-          ? 'high'
-          : metrics.daysOfLifeLostEstimate > 30
-            ? 'moderate'
-            : 'low',
-    },
+    metrics.lifeLostApplies
+      ? {
+          label: 'Life expectancy lost so far',
+          value: formatLifeLost(metrics.daysOfLifeLostEstimate),
+          detail: `≈20 min per cigarette · ${formatLifeLost(metrics.daysLostPerYear)} more each year`,
+          icon: 'alert',
+          color: 'red',
+          trend: band(metrics.daysOfLifeLostEstimate, 30, 365),
+        }
+      : {
+          label: 'Life expectancy',
+          value: 'Not yet known',
+          detail: 'Long-term data on vaping and pouches doesn’t exist yet',
+          icon: 'alert',
+          color: 'red',
+          trend: 'unknown',
+        },
   ];
 
   return (

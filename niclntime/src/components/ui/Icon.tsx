@@ -14,6 +14,7 @@ export type IconName =
   | 'heart'
   | 'info'
   | 'lungs'
+  | 'pouch'
   | 'refresh'
   | 'settings'
   | 'share'
@@ -93,6 +94,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M12 4v9" />
       <path d="M12 8c-2-2.6-4.4-3.3-6.7-2.2C3.2 6.8 2 9.4 2 12.5V17a3 3 0 0 0 3 3h1.5a3 3 0 0 0 3-3v-2.4c0-1.7.9-3.3 2.5-4.1" />
       <path d="M12 8c2-2.6 4.4-3.3 6.7-2.2C20.8 6.8 22 9.4 22 12.5V17a3 3 0 0 1-3 3h-1.5a3 3 0 0 1-3-3v-2.4c0-1.7-.9-3.3-2.5-4.1" />
+    </>
+  ),
+  pouch: (
+    <>
+      <rect x="4" y="7" width="16" height="10" rx="5" />
+      <path d="M8 12h8" />
     </>
   ),
   refresh: (

@@ -3,8 +3,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_INPUTS,
+  DEFAULT_CIGARETTES,
+  DEFAULT_POUCHES,
+  DEFAULT_VAPING,
+  DEVICE_PROFILES,
   EXAMPLE_INPUTS,
   CURRENCIES,
+  VAPE_PRODUCTS,
+  POUCH_PRODUCTS,
+  CIGARETTE_TYPE_LABELS,
   type UserInputs,
   type WhatIfScenario,
   type CalculatedMetrics,
@@ -16,10 +23,13 @@ import {
   formatCurrency,
   formatCompactCurrency,
   formatDuration,
+  formatFlexible,
+  formatLifeLost,
   formatNumber,
 } from '@/lib/calculations';
 import { VapingInputForm } from '@/components/inputs/VapingInput';
 import { CigaretteInputForm } from '@/components/inputs/CigaretteInput';
+import { PouchInputForm } from '@/components/inputs/PouchInput';
 import { GeneralSettings } from '@/components/inputs/GeneralSettings';
 import { SummaryCards } from '@/components/visualizers/SummaryCards';
 import { RiskGauge } from '@/components/visualizers/RiskGauge';
@@ -50,7 +60,7 @@ export default function Dashboard() {
 
   const metrics = useMemo(() => calculateMetrics(inputs), [inputs]);
   const whatIfScenarios = useMemo(() => generateWhatIfScenarios(inputs), [inputs]);
-  const hasAnyInput = Boolean(inputs.vaping || inputs.cigarettes);
+  const hasAnyInput = Boolean(inputs.vaping || inputs.cigarettes || inputs.pouches);
   const currency = inputs.currency;
 
   // Restore local data or a shared link after mount.
@@ -71,7 +81,7 @@ export default function Dashboard() {
         // Hydrate persisted state once after mount so server and client markup match.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setInputs(restored);
-        if (restored.vaping || restored.cigarettes) setActiveTab('dashboard');
+        if (restored.vaping || restored.cigarettes || restored.pouches) setActiveTab('dashboard');
       }
     } catch {
       // Corrupt storage or an invalid link should never block the app.
@@ -281,7 +291,7 @@ export default function Dashboard() {
             <PageHeading
               eyebrow="Step 1 of 2"
               title="Configure your usage"
-              description="Use one or both modules. Everything updates instantly and stays in your browser."
+              description="Add whatever you use — vapes, cigarettes, pouches or any mix. Everything updates instantly and stays in your browser."
               action={
                 <button
                   type="button"
@@ -300,47 +310,43 @@ export default function Dashboard() {
                   value={inputs.vaping}
                   onChange={(vaping) => updateInputs({ vaping })}
                   enabled={Boolean(inputs.vaping)}
-                  onToggle={(enabled) =>
-                    updateInputs({
-                      vaping: enabled
-                        ? { hitsPerDay: 100, deviceType: 'pod', nicotineConcentration: 20, volumePerDay: 2 }
-                        : null,
-                    })
-                  }
+                  onToggle={(enabled) => updateInputs({ vaping: enabled ? { ...DEFAULT_VAPING } : null })}
+                  costPerMl={inputs.costPerVapeMl}
+                  onCostPerMlChange={(costPerVapeMl) => updateInputs({ costPerVapeMl })}
+                  currency={currency}
                 />
                 <CigaretteInputForm
                   value={inputs.cigarettes}
                   onChange={(cigarettes) => updateInputs({ cigarettes })}
                   enabled={Boolean(inputs.cigarettes)}
                   onToggle={(enabled) =>
-                    updateInputs({
-                      cigarettes: enabled
-                        ? { cigarettesPerDay: 10, type: 'regular' }
-                        : null,
-                    })
+                    updateInputs({ cigarettes: enabled ? { ...DEFAULT_CIGARETTES } : null })
                   }
+                  costPerPack={inputs.costPerPack}
+                  onCostPerPackChange={(costPerPack) => updateInputs({ costPerPack })}
+                  currency={currency}
+                />
+                <PouchInputForm
+                  value={inputs.pouches}
+                  onChange={(pouches) => updateInputs({ pouches })}
+                  enabled={Boolean(inputs.pouches)}
+                  onToggle={(enabled) => updateInputs({ pouches: enabled ? { ...DEFAULT_POUCHES } : null })}
+                  costPerCan={inputs.costPerCan}
+                  onCostPerCanChange={(costPerCan) => updateInputs({ costPerCan })}
+                  currency={currency}
                 />
               </div>
               <div className="space-y-5">
-                <GeneralSettings
-                  value={{
-                    costPerVapeMl: inputs.costPerVapeMl,
-                    costPerPack: inputs.costPerPack,
-                    yearsOfUse: inputs.yearsOfUse,
-                    age: inputs.age,
-                    currency: inputs.currency,
-                  }}
-                  onChange={(settings) => updateInputs(settings)}
-                />
-                <Card variant="default" className="bg-gradient-to-br from-cyan-500/[0.06] to-transparent">
-                  <CardContent className="p-5">
-                    <Icon name="shield" size={20} className="text-emerald-400" />
-                    <h3 className="mt-3 text-sm font-semibold text-zinc-100">Your data never leaves this device</h3>
-                    <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">
-                      Inputs are saved in local browser storage. There is no sign-in, analytics or backend.
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="lg:sticky lg:top-24">
+                  <GeneralSettings
+                    value={{
+                      yearsOfUse: inputs.yearsOfUse,
+                      age: inputs.age,
+                      currency: inputs.currency,
+                    }}
+                    onChange={(settings) => updateInputs(settings)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -350,10 +356,10 @@ export default function Dashboard() {
                   <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-zinc-700 bg-zinc-800/50 text-zinc-400">
                     <Icon name="info" size={22} />
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-zinc-200">Enable a module to begin</h3>
+                  <h3 className="mt-4 text-lg font-semibold text-zinc-200">Add what you use to begin</h3>
                   <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-                    Turn on vaping, cigarettes, or both. You can change every number later and compare
-                    scenarios at any point.
+                    Tap “+ Add” on vaping, cigarettes or pouches — or any combination. You can change every
+                    number later and compare scenarios at any point.
                   </p>
                 </CardContent>
               </Card>
@@ -432,7 +438,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {whatIfScenarios.map((scenario) => (
                 <WhatIfCard
-                  key={scenario.label}
+                  key={scenario.id}
                   scenario={scenario}
                   baseline={whatIfScenarios[0]?.metrics}
                   currency={currency}
@@ -459,7 +465,7 @@ export default function Dashboard() {
                       <tr className="border-b border-zinc-800 bg-zinc-950/40 text-left text-[11px] uppercase tracking-wide text-zinc-500">
                         <th className="sticky left-0 z-10 bg-zinc-950/95 px-4 py-3 font-medium sm:px-5">Metric</th>
                         {whatIfScenarios.map((scenario) => (
-                          <th key={scenario.label} className="px-3 py-3 text-center font-medium">
+                          <th key={scenario.id} className="px-3 py-3 text-center font-medium">
                             {scenario.label}
                           </th>
                         ))}
@@ -475,7 +481,7 @@ export default function Dashboard() {
                         values={whatIfScenarios.map((scenario) => `${scenario.metrics.dailyAerosolVolumeLiters.toFixed(1)} L`)}
                       />
                       <ComparisonRow
-                        label="Heart rate"
+                        label="Avg. heart rate rise"
                         values={whatIfScenarios.map((scenario) => `+${scenario.metrics.heartRateIncreaseBpm.toFixed(0)} bpm`)}
                       />
                       <ComparisonRow
@@ -504,10 +510,12 @@ export default function Dashboard() {
                         values={whatIfScenarios.map((scenario) => scenario.metrics.riskLevel)}
                         capitalize
                       />
-                      <ComparisonRow
-                        label="Life lost estimate"
-                        values={whatIfScenarios.map((scenario) => `${scenario.metrics.daysOfLifeLostEstimate} days`)}
-                      />
+                      {whatIfScenarios[0]?.metrics.lifeLostApplies && (
+                        <ComparisonRow
+                          label="Life expectancy lost / year (smoking)"
+                          values={whatIfScenarios.map((scenario) => formatLifeLost(scenario.metrics.daysLostPerYear))}
+                        />
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -621,7 +629,7 @@ function Resources() {
     },
     {
       title: 'This Is Quitting',
-      description: 'Text-based program for young adults quitting vaping.',
+      description: 'Free text program for quitting vaping — text DITCHVAPE to 88709 (US).',
       url: 'https://truthinitiative.org/thisisquitting',
       icon: 'sparkles' as IconName,
     },
@@ -638,9 +646,9 @@ function Resources() {
       icon: 'info' as IconName,
     },
     {
-      title: 'Quit vaping apps',
-      description: 'Mobile apps such as QuitVaping and Smoke Free.',
-      url: 'https://www.cdc.gov/tobacco/quit_smoking/quitting_vaping/apps.html',
+      title: 'NHS Quit Smoking (UK)',
+      description: 'Free NHS app, local stop-smoking services and advice.',
+      url: 'https://www.nhs.uk/better-health/quit-smoking/',
       icon: 'external' as IconName,
     },
   ];
@@ -695,12 +703,12 @@ function WhatIfCard({
   baseline?: CalculatedMetrics;
   currency: UserInputs['currency'];
 }) {
-  const isBaseline = !baseline || scenario.label === 'Current usage';
+  const isBaseline = !baseline || scenario.id === 'current';
   const savings = baseline ? baseline.yearlyCost - scenario.metrics.yearlyCost : 0;
   const riskChange = baseline ? baseline.riskScore - scenario.metrics.riskScore : 0;
   const nicotineChange = baseline ? baseline.dailyNicotineMg - scenario.metrics.dailyNicotineMg : 0;
   const timeChange = baseline ? baseline.minutesPerDaySpent - scenario.metrics.minutesPerDaySpent : 0;
-  const lifeChange = baseline ? baseline.daysOfLifeLostEstimate - scenario.metrics.daysOfLifeLostEstimate : 0;
+  const lifeChange = baseline ? baseline.daysLostPerYear - scenario.metrics.daysLostPerYear : 0;
 
   return (
     <div
@@ -730,6 +738,14 @@ function WhatIfCard({
             Risk {scenario.metrics.riskScore}/100 · {formatNumber(scenario.metrics.dailyNicotineMg, 1)} mg nicotine/day
           </div>
         </div>
+      ) : savings <= 0 ? (
+        <div className="mt-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3">
+          <div className="text-[10px] uppercase tracking-wide text-emerald-300/70">Less nicotine each day</div>
+          <div className="mt-0.5 font-mono text-2xl font-semibold text-emerald-300">
+            -{formatNumber(Math.max(nicotineChange, 0), 0)} mg
+          </div>
+          <div className="mt-1 text-[11px] text-zinc-500">Same spend — a stepping stone toward quitting</div>
+        </div>
       ) : (
         <div className="mt-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3">
           <div className="text-[10px] uppercase tracking-wide text-emerald-300/70">Potential yearly savings</div>
@@ -758,11 +774,13 @@ function WhatIfCard({
           value={formatDuration(scenario.metrics.minutesPerDaySpent)}
           change={!isBaseline && timeChange > 0 ? `-${formatDuration(timeChange)}` : undefined}
         />
-        <DeltaRow
-          label="Life lost est."
-          value={`${formatNumber(scenario.metrics.daysOfLifeLostEstimate)} days`}
-          change={!isBaseline && lifeChange > 0 ? `-${formatNumber(lifeChange)} days` : undefined}
-        />
+        {baseline?.lifeLostApplies && (
+          <DeltaRow
+            label="Life exp. lost / yr"
+            value={formatLifeLost(scenario.metrics.daysLostPerYear)}
+            change={!isBaseline && lifeChange > 0.5 ? `+${formatLifeLost(lifeChange)} back` : undefined}
+          />
+        )}
       </div>
     </div>
   );
@@ -812,46 +830,68 @@ function ComparisonRow({
   );
 }
 
+function describeVaping(vaping: NonNullable<UserInputs['vaping']>): string {
+  const product = VAPE_PRODUCTS.find((item) => item.id === vaping.productId);
+  const unit = DEVICE_PROFILES[vaping.deviceType].unit;
+  const days = vaping.volumePerDay > 0 ? vaping.unitSizeMl / vaping.volumePerDay : 0;
+  return [
+    product ? product.name : DEVICE_PROFILES[vaping.deviceType].label,
+    `${formatFlexible(vaping.nicotineConcentration, 1)} mg/mL (${formatFlexible(vaping.nicotineConcentration / 10, 1)}%)`,
+    `one ${formatFlexible(vaping.unitSizeMl, 1)} mL ${unit} every ${formatFlexible(days, 1)} days`,
+    `${formatFlexible(vaping.volumePerDay, 2)} mL/day`,
+    `~${vaping.hitsPerDay} puffs/day`,
+  ].join(', ');
+}
+
 function buildReport(inputs: UserInputs, metrics: CalculatedMetrics, scenarios: WhatIfScenario[]): string {
   const currency = CURRENCIES[inputs.currency];
+  const money = (value: number) => formatCurrency(value, inputs.currency);
+  const pouchProduct = inputs.pouches ? POUCH_PRODUCTS.find((item) => item.id === inputs.pouches?.productId) : null;
   const lines: string[] = [
     '# Nicotine Impact Report',
     '',
     `Generated: ${new Date().toLocaleString()}`,
     `Currency: ${currency.code} (${currency.label})`,
     '',
-    '## Inputs',
+    '## What I use',
     '',
     inputs.vaping
-      ? `- Vaping: ${inputs.vaping.hitsPerDay} puffs/day, ${inputs.vaping.deviceType}, ${inputs.vaping.nicotineConcentration} mg/mL, ${inputs.vaping.volumePerDay} mL/day`
+      ? `- Vaping: ${describeVaping(inputs.vaping)} — ${money(inputs.costPerVapeMl * inputs.vaping.unitSizeMl)} per ${DEVICE_PROFILES[inputs.vaping.deviceType].unit}`
       : '- Vaping: none',
     inputs.cigarettes
-      ? `- Cigarettes: ${inputs.cigarettes.cigarettesPerDay}/day, ${inputs.cigarettes.type}`
+      ? `- Cigarettes: ${inputs.cigarettes.cigarettesPerDay}/day, ${CIGARETTE_TYPE_LABELS[inputs.cigarettes.type]}, ${money(inputs.costPerPack)} per pack of ${inputs.cigarettes.packSize}`
       : '- Cigarettes: none',
+    inputs.pouches
+      ? `- Nicotine pouches: ${formatFlexible(inputs.pouches.pouchesPerDay, 1)}/day, ${pouchProduct ? pouchProduct.name : `${inputs.pouches.mgPerPouch} mg`}, ${money(inputs.costPerCan)} per can of ${inputs.pouches.pouchesPerCan}`
+      : '- Nicotine pouches: none',
     `- Years of use: ${inputs.yearsOfUse}`,
     `- Age: ${inputs.age}`,
-    `- E-liquid cost: ${formatCurrency(inputs.costPerVapeMl, inputs.currency)}/mL`,
-    `- Pack cost: ${formatCurrency(inputs.costPerPack, inputs.currency)}`,
     '',
     '## Key estimates',
     '',
-    `- Absorbed nicotine: ${metrics.dailyNicotineMg.toFixed(1)} mg/day`,
-    `- Inhaled aerosol/smoke: ${metrics.dailyAerosolVolumeLiters.toFixed(1)} L/day`,
+    `- Nicotine absorbed: ${metrics.dailyNicotineMg.toFixed(1)} mg/day (≈ ${formatNumber(metrics.dailyCigaretteEquivalent, 0)} cigarettes' worth)`,
+    `- Inhaled smoke: ${metrics.dailySmokeVolumeLiters.toFixed(1)} L/day; vape aerosol: ${metrics.dailyVapeAerosolLiters.toFixed(1)} L/day`,
+    ...(metrics.dailyTarMg > 0
+      ? [`- Tar: ${metrics.dailyTarMg.toFixed(0)} mg/day; carbon monoxide: ${metrics.dailyCarbonMonoxideMg.toFixed(0)} mg/day; ${metrics.packYears.toFixed(1)} pack-years`]
+      : []),
+    `- Average heart-rate rise: +${metrics.heartRateIncreaseBpm.toFixed(0)} bpm`,
     `- Relative risk score: ${metrics.riskScore}/100 (${metrics.riskLevel})`,
-    `- Daily cost: ${formatCurrency(metrics.dailyCost, inputs.currency)}`,
-    `- Monthly cost: ${formatCurrency(metrics.monthlyCost, inputs.currency)}`,
-    `- Yearly cost: ${formatCurrency(metrics.yearlyCost, inputs.currency)}`,
-    `- Projected cost until age 80: ${formatCurrency(metrics.lifetimeCost, inputs.currency)} (${metrics.projectionYears} years)`,
+    `- Daily cost: ${money(metrics.dailyCost)}`,
+    `- Monthly cost: ${money(metrics.monthlyCost)}`,
+    `- Yearly cost: ${money(metrics.yearlyCost)}`,
+    `- Projected cost until age 80: ${money(metrics.lifetimeCost)} (${metrics.projectionYears} years)`,
     `- Time spent: ${formatDuration(metrics.minutesPerDaySpent)}/day, ${metrics.hoursPerYearSpent.toFixed(0)} hours/year`,
-    `- Estimated life lost: ${metrics.daysOfLifeLostEstimate} days`,
+    metrics.lifeLostApplies
+      ? `- Life expectancy lost to smoking so far: ${formatLifeLost(metrics.daysOfLifeLostEstimate)} (${formatLifeLost(metrics.daysLostPerYear)} per year at this rate)`
+      : '- Life expectancy: no smoking entered; long-term effects of vaping and pouches are not yet established',
     '',
     '## What-if scenarios',
     '',
-    '| Scenario | Risk | Nicotine/day | Yearly cost |',
-    '| --- | ---: | ---: | ---: |',
+    '| Scenario | Risk | Nicotine/day | Yearly cost | Life exp. lost/yr |',
+    '| --- | ---: | ---: | ---: | ---: |',
     ...scenarios.map(
       (scenario) =>
-        `| ${scenario.label} | ${scenario.metrics.riskScore}/100 | ${scenario.metrics.dailyNicotineMg.toFixed(1)} mg | ${formatCurrency(scenario.metrics.yearlyCost, inputs.currency)} |`
+        `| ${scenario.label} | ${scenario.metrics.riskScore}/100 | ${scenario.metrics.dailyNicotineMg.toFixed(1)} mg | ${money(scenario.metrics.yearlyCost)} | ${formatLifeLost(scenario.metrics.daysLostPerYear)} |`
     ),
     '',
     '## Disclaimer',

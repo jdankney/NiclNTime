@@ -1,13 +1,13 @@
 # NiclNTime — Nicotine Impact Visualizer
 
-> **A private, browser-based tool that turns vaping and cigarette use into a clear picture of nicotine exposure, money spent and time lost.**
+> **A private, browser-based tool that turns vapes (Geek Bar, Raz, Elf Bar, JUUL…), cigarettes and nicotine pouches (ZYN, on!, VELO) into a clear picture of nicotine intake, money spent and time lost.**
 
 [![CI](https://github.com/j4mes/NiclNTime/actions/workflows/ci.yml/badge.svg)](https://github.com/j4mes/NiclNTime/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/license-MIT-22d3ee.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org)
 
-NiclNTime is an educational web app for anyone curious about what their nicotine habit costs — in health exposure, money and time. Enter vaping and/or cigarette use, then explore a visual dashboard and compare what changes if you cut down or quit.
+NiclNTime is an educational web app for anyone curious about what their nicotine habit costs — in health exposure, money and time. Pick the products you use, say how long one lasts and what you pay, then explore a visual dashboard and compare what changes if you cut down or quit.
 
 **No account. No backend. No tracking. Your inputs stay in your browser.**
 
@@ -25,24 +25,30 @@ The app is fully responsive and works on mobile, tablet and desktop. Screenshots
 
 ## Features
 
+### Built around what people actually use
+- **Popular devices pre-filled** — Geek Bar Pulse / Pulse X, Raz DC25000, Elf Bar BC5000, Lost Mary MO5000, Breeze Pro, JUUL, Vuse Alto, NJOY Ace, UK/EU 600-puff pods, refillable pods and sub-ohm tanks.
+- **Plain-language questions** — "How long does one device last you?" and "What do you pay per device?" instead of mL/day and price per mL.
+- **Nicotine pouches** — ZYN, on!, VELO or any custom strength and can size.
+- **Mix and match** — vaping, smoking and pouches in any combination.
+
 ### Understand your exposure
-- **Nicotine load** — absorbed mg/day based on device type, e-liquid strength, volume or cigarette yields.
-- **Chemical exposure** — estimated tar and carbon monoxide for cigarettes.
-- **Respiratory volume** — daily and yearly inhaled aerosol/smoke estimates with an animated lung visual.
-- **Cardiovascular estimates** — rough heart-rate and blood-pressure impact.
-- **Relative risk score** — a transparent 0–100 composite with a factor-by-factor breakdown.
-- **Life-lost estimate** — based on the widely cited ~11 minutes per cigarette-equivalent.
+- **Nicotine absorbed** — mg/day and cigarette-equivalents, with an uncertainty range for vaping.
+- **Smoke toxicants** — tar, carbon monoxide and pack-years for cigarettes.
+- **Inhaled load** — smoke and vape aerosol shown separately (vapor is weighted far lower than smoke).
+- **Heart rate** — estimated average daytime rise from nicotine.
+- **Relative risk score** — a transparent 0–100 composite, weighted so smoking dominates.
+- **Life expectancy** — ~20 minutes per cigarette (UCL, 2025). Not applied to vaping or pouches, where long-term data doesn't exist yet.
 
 ### Understand the cost
 - **Daily → lifetime spending** with 40+ currencies.
-- **Investment opportunity cost** — hypothetical 7% return over 10, 20 and 30 years.
+- **Investment opportunity cost** — 7% a year after inflation, monthly contributions, over 10, 20 and 30 years.
 - **Alternative purchases** — what your projected spending could buy instead.
 - **What-if savings** — see potential savings from reducing or quitting.
 
 ### Understand the time
 - Daily and yearly time consumed.
 - Activity equivalencies: work weeks, films, books, workouts, sleep.
-- Animated timeline and estimated life lost.
+- Animated timeline and life expectancy lost to smoking.
 - Live counters so the numbers feel tangible.
 
 ### Built to be usable
@@ -129,39 +135,43 @@ NiclNTime/
 
 ---
 
-## Supported device types
+## Supported products
 
-| Device | Absorption estimate | Aerosol per puff* |
-| --- | ---: | ---: |
-| Disposable | 30% | 45 mL |
-| Pod system | 40% | 55 mL |
-| Mod / tank | 25% | 100 mL |
-| Geek Bar / Elf Bar / Lost Mary | 45% | 50 mL |
-| Fogger / cloud chaser | 20% | 150 mL |
-| Pod mod | 35% | 70 mL |
-| Squonk / bottom-feeder | 22% | 110 mL |
-| AIO | 30% | 65 mL |
-| Cigalike | 15% | 30 mL |
+### Vapes
 
-\* Illustrative population averages used for communication, not clinical measurement.
+| Category | Examples | Puff volume* | Real puffs per mL* |
+| --- | --- | ---: | ---: |
+| Disposable | Geek Bar, Raz, Elf Bar, Lost Mary, Breeze | 60 mL | ~200 |
+| Pre-filled pod | JUUL, Vuse Alto, NJOY Ace, UK/EU 600-puff pods | 55 mL | ~250 |
+| Refillable pod / AIO | Caliburn, XROS, Vinci + nic-salt bottle | 70 mL | ~150 |
+| Sub-ohm tank / mod | Tanks and rebuildables + freebase bottle | 200 mL | ~40 |
 
-### Supported cigarette strengths
+All vapes use one central estimate: **~50% of the nicotine in the liquid you use reaches your bloodstream** (plausible range 30–70%). Device category only affects inhaled volume, time spent and the suggested puff count.
 
-Light/ultra-light, regular and full-flavor, using typical published nicotine, tar and carbon monoxide yields.
+\* Typical values from puff-topography studies. Manufacturer puff ratings (e.g. "25k puffs") are measured with short lab puffs, so the app works from liquid used instead.
+
+### Cigarettes
+
+"Light", regular and full-flavor, with ~0.9 / 1.0 / 1.2 mg nicotine absorbed per cigarette and ISO machine yields for tar and CO. Pack size 20 or 25.
+
+### Nicotine pouches
+
+Any mg strength and can size. ~50% of the labelled nicotine is assumed to be absorbed (ZYN releases ~56–59% during use).
 
 ---
 
 ## Calculation notes
 
-The engine lives in [`niclntime/src/lib/calculations.ts`](niclntime/src/lib/calculations.ts) and is made of pure, defensive functions.
+The engine lives in [`niclntime/src/lib/calculations.ts`](niclntime/src/lib/calculations.ts) and is made of pure, defensive functions. Every constant is documented with its source in [`niclntime/src/types/index.ts`](niclntime/src/types/index.ts).
 
-- Inputs are clamped to sensible ranges; unknown values from links or storage cannot produce `NaN` or `Infinity`.
-- The risk score is a **weighted composite created for this project**, not a validated clinical calculator.
-- “Lifetime” cost projects current spending until age 80, with a one-year minimum projection.
-- Vaping life-lost estimates convert absorbed nicotine into cigarette-equivalents. That is a rough communication aid, not a medical prediction.
-- One cigarette is commonly estimated to cost around **11 minutes of life** (BMJ, 2000). Individual outcomes vary widely.
+- Inputs are clamped to sensible ranges; unknown values from links or storage cannot produce `NaN` or `Infinity`. Data saved by older versions of the app (and old share links) is migrated automatically.
+- **Life expectancy:** ~20 minutes per cigarette (Jackson, Jarvis & West, *Addiction* 2025), replacing the older 11-minute figure (Shaw et al., *BMJ* 2000). What-if scenarios compare life expectancy lost *per year* going forward.
+- **Risk score:** smoke toxicants 45 · nicotine 15 · inhaled load 10 · heart 10 · years of use 10 · under-25 brain development 10. Smoking points rise steeply even at a few cigarettes a day (Hackshaw et al., *BMJ* 2018). This is a communication aid, not a validated clinical calculator.
+- **Heart rate:** saturating curve reaching ~7 bpm at 20 mg/day and levelling off near 10 bpm, consistent with smokers' average daytime elevation.
+- **Lifetime cost** projects current spending until age 80, with a one-year minimum.
+- "What this could buy" reference prices are set in USD and scaled with approximate exchange rates; your own prices are never converted.
 
-See the in-app **“How the numbers are estimated”** section for methodology and public-health sources.
+See the in-app **"How the numbers are estimated"** section for every assumption and source.
 
 ---
 

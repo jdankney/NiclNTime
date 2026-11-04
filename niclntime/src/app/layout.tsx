@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s · NiclNTime",
   },
   description:
-    "A private, browser-based tool that turns vaping and cigarette use into clear estimates of nicotine exposure, financial cost and time lost. Educational only — not medical advice.",
+    "A private, browser-based tool that turns disposable vapes (Geek Bar, Raz, Elf Bar), pods, cigarettes and nicotine pouches into clear estimates of nicotine intake, cost and time lost. Educational only — not medical advice.",
   applicationName: "NiclNTime",
   keywords: [
     "nicotine",
@@ -29,6 +29,10 @@ export const metadata: Metadata = {
     "quit smoking",
     "quit vaping",
     "nicotine calculator",
+    "geek bar nicotine",
+    "disposable vape",
+    "nicotine pouches",
+    "zyn",
   ],
   authors: [{ name: "NiclNTime contributors" }],
   creator: "NiclNTime contributors",

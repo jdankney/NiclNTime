@@ -3,28 +3,43 @@
 import { CalculatedMetrics } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { formatNumber } from '@/lib/calculations';
+import { formatNumber, VAPE_AEROSOL_RESPIRATORY_WEIGHT } from '@/lib/calculations';
 
 interface LungsVisualizerProps {
   metrics: CalculatedMetrics;
 }
 
+/** Smoke from roughly a pack of 20 cigarettes (~11 L) — used as the 100% point. */
 const REFERENCE_VOLUME_LITERS = 12;
+/** Vape aerosol carries far fewer toxicants than smoke, so it counts for less of the load. */
+const VAPOR_WEIGHT = VAPE_AEROSOL_RESPIRATORY_WEIGHT;
 
 export function LungsVisualizer({ metrics }: LungsVisualizerProps) {
-  const exposureRatio = Math.min(metrics.dailyAerosolVolumeLiters / REFERENCE_VOLUME_LITERS, 1);
+  const weightedLoad = metrics.dailySmokeVolumeLiters + metrics.dailyVapeAerosolLiters * VAPOR_WEIGHT;
+  const exposureRatio = Math.min(weightedLoad / REFERENCE_VOLUME_LITERS, 1);
   const exposurePercent = Math.round(exposureRatio * 100);
-  const particleCount = Math.min(Math.floor(metrics.dailyAerosolVolumeLiters * 14), 90);
+  const particleCount = Math.min(Math.floor(weightedLoad * 14), 90);
+  const nothingInhaled = metrics.dailyAerosolVolumeLiters === 0;
 
-  const status =
-    exposurePercent <= 25
+  const status = nothingInhaled
+    ? {
+        label: 'Nothing inhaled',
+        color: 'text-emerald-300',
+        border: 'border-emerald-500/40 bg-emerald-500/10',
+        stroke: '#34d399',
+        message:
+          'Pouches skip the lungs entirely. Nicotine still reaches your bloodstream, raises heart rate and keeps dependence going, and pouches can irritate your gums.',
+      }
+    : exposurePercent <= 25
       ? {
           label: 'Lower exposure',
           color: 'text-emerald-300',
           border: 'border-emerald-500/40 bg-emerald-500/10',
           stroke: '#34d399',
           message:
-            'Your estimated inhaled aerosol or smoke volume is relatively low, but nicotine still affects the cardiovascular system.',
+            metrics.dailySmokeVolumeLiters > 0
+              ? 'Your smoke load is on the lower end, but there is no safe level of smoking — even a few cigarettes a day raise heart and lung risks.'
+              : 'Vapor contains far fewer toxicants than smoke, but it still irritates airways. Long-term lung effects of vaping are still being studied.',
         }
       : exposurePercent <= 60
         ? {
@@ -33,7 +48,9 @@ export function LungsVisualizer({ metrics }: LungsVisualizerProps) {
             border: 'border-amber-500/40 bg-amber-500/10',
             stroke: '#fbbf24',
             message:
-              'Your lungs are processing a noticeable volume of aerosol or smoke every day. Reducing puffs or cigarettes lowers this load.',
+              metrics.dailySmokeVolumeLiters > 0
+                ? 'Your lungs are processing a noticeable volume of smoke every day. Cutting cigarettes first makes the biggest difference.'
+                : 'That is a lot of vapor every day. Fewer puffs means less irritation for your airways.',
           }
         : {
             label: 'Higher exposure',
@@ -172,14 +189,21 @@ export function LungsVisualizer({ metrics }: LungsVisualizerProps) {
               </div>
               <div className="space-y-3">
                 <VolumeBar
-                  label="Aerosol / smoke"
-                  value={metrics.dailyAerosolVolumeLiters}
+                  label="Cigarette smoke"
+                  value={metrics.dailySmokeVolumeLiters}
                   max={REFERENCE_VOLUME_LITERS}
+                  color="bg-amber-400"
+                  unit="L"
+                />
+                <VolumeBar
+                  label="Vape aerosol"
+                  value={metrics.dailyVapeAerosolLiters}
+                  max={Math.max(REFERENCE_VOLUME_LITERS, metrics.dailyVapeAerosolLiters)}
                   color="bg-cyan-400"
                   unit="L"
                 />
                 <VolumeBar
-                  label="Reference scale"
+                  label="Reference: a pack a day of smoke"
                   value={REFERENCE_VOLUME_LITERS}
                   max={REFERENCE_VOLUME_LITERS}
                   color="bg-zinc-600"
@@ -188,7 +212,8 @@ export function LungsVisualizer({ metrics }: LungsVisualizerProps) {
                 />
               </div>
               <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">
-                The reference scale is a visual comparison point, not a medical threshold.
+                “Relative load” counts vapor at {Math.round(VAPOR_WEIGHT * 100)}% of the same volume of smoke. It
+                is a visual comparison, not a medical threshold.
               </p>
             </div>
 
@@ -196,7 +221,7 @@ export function LungsVisualizer({ metrics }: LungsVisualizerProps) {
               <MetricTile label="Daily" value={formatNumber(metrics.dailyAerosolVolumeLiters, 1)} unit="L" color="text-cyan-300" />
               <MetricTile label="Yearly" value={formatNumber(metrics.yearlyAerosolVolumeLiters, 0)} unit="L" color="text-blue-300" />
               <MetricTile label="Time" value={formatNumber(metrics.minutesPerDaySpent, 0)} unit="min/day" color="text-amber-300" />
-              <MetricTile label="Particles" value={formatNumber(particleCount)} unit="shown" color="text-purple-300" />
+              <MetricTile label="Relative load" value={formatNumber(exposurePercent)} unit="% of a pack/day" color="text-purple-300" />
             </div>
 
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">

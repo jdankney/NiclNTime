@@ -1,10 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalculatedMetrics, CurrencyCode, WhatIfScenario } from '@/types';
+import {
+  CURRENCIES,
+  LIFE_EXPECTANCY_YEARS,
+  REAL_INVESTMENT_RETURN,
+  type CalculatedMetrics,
+  type CurrencyCode,
+  type WhatIfScenario,
+} from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { formatCurrency, formatCompactCurrency } from '@/lib/calculations';
+import { formatCurrency, formatCompactCurrency, roundToSignificant } from '@/lib/calculations';
 
 interface WalletVisualizerProps {
   metrics: CalculatedMetrics;
@@ -12,17 +19,27 @@ interface WalletVisualizerProps {
   whatIfScenarios?: WhatIfScenario[];
 }
 
+/** Reference prices in USD, scaled to the selected currency with an approximate exchange rate. */
 const ALTERNATIVES = [
-  { label: 'New car', cost: 30000, emoji: '🚗' },
-  { label: 'House deposit', cost: 100000, emoji: '🏠' },
-  { label: 'World trip', cost: 20000, emoji: '🌍' },
-  { label: 'Index fund', cost: 50000, emoji: '📈' },
-  { label: 'Emergency fund', cost: 10000, emoji: '💰' },
-  { label: 'College fund', cost: 80000, emoji: '🎓' },
+  { label: 'New phone', costUsd: 1000, emoji: '📱' },
+  { label: 'Concert / festival trip', costUsd: 1500, emoji: '🎟️' },
+  { label: 'Week abroad', costUsd: 3000, emoji: '✈️' },
+  { label: 'Emergency fund', costUsd: 10000, emoji: '💰' },
+  { label: 'Used car', costUsd: 25000, emoji: '🚗' },
+  { label: 'Home deposit', costUsd: 60000, emoji: '🏠' },
 ];
 
 export function WalletVisualizer({ metrics, currency, whatIfScenarios }: WalletVisualizerProps) {
   const sessionSpend = useSessionSpend(metrics.dailyCost);
+  const fx = CURRENCIES[currency].perUsd;
+  const alternatives = ALTERNATIVES.map((item) => ({
+    label: item.label,
+    emoji: item.emoji,
+    cost: roundToSignificant(item.costUsd * fx, 2),
+  }));
+  const savingScenarios = (whatIfScenarios ?? [])
+    .slice(1)
+    .filter((scenario) => scenario.metrics.yearlyCost < metrics.yearlyCost);
 
   return (
     <Card variant="elevated" className="overflow-hidden">
@@ -59,21 +76,21 @@ export function WalletVisualizer({ metrics, currency, whatIfScenarios }: WalletV
           <CostCard label="Monthly" value={formatCurrency(metrics.monthlyCost, currency)} color="text-orange-300" />
           <CostCard label="Yearly" value={formatCurrency(metrics.yearlyCost, currency)} color="text-amber-300" />
           <CostCard
-            label={`Until 80`}
+            label={`Until ${LIFE_EXPECTANCY_YEARS}`}
             value={formatCompactCurrency(metrics.lifetimeCost, currency)}
             color="text-purple-300"
           />
         </div>
 
-        {whatIfScenarios && whatIfScenarios.length > 1 && (
+        {savingScenarios.length > 0 && (
           <div className="mt-7">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="text-sm font-medium text-zinc-200">Savings if you change habits</h4>
               <span className="text-[10px] uppercase tracking-wide text-zinc-600">per year</span>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {whatIfScenarios.slice(1).map((scenario) => (
-                <ScenarioCard key={scenario.label} scenario={scenario} baseline={metrics} currency={currency} />
+              {savingScenarios.map((scenario) => (
+                <ScenarioCard key={scenario.id} scenario={scenario} baseline={metrics} currency={currency} />
               ))}
             </div>
           </div>
@@ -84,10 +101,10 @@ export function WalletVisualizer({ metrics, currency, whatIfScenarios }: WalletV
             <h4 className="text-sm font-medium text-zinc-200">
               What {formatCompactCurrency(metrics.lifetimeCost, currency)} could buy
             </h4>
-            <span className="text-[10px] uppercase tracking-wide text-zinc-600">until age 80</span>
+            <span className="text-[10px] uppercase tracking-wide text-zinc-600">until age {LIFE_EXPECTANCY_YEARS}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {ALTERNATIVES.map((alternative) => (
+            {alternatives.map((alternative) => (
               <AlternativeCard
                 key={alternative.label}
                 alternative={alternative}
@@ -106,7 +123,8 @@ export function WalletVisualizer({ metrics, currency, whatIfScenarios }: WalletV
             <div>
               <h4 className="text-sm font-semibold text-zinc-100">If invested instead</h4>
               <p className="mt-0.5 text-xs text-zinc-500">
-                Hypothetical 7% average annual return, contributing your yearly spend.
+                Monthly contributions at a {Math.round(REAL_INVESTMENT_RETURN * 100)}% yearly return after
+                inflation — roughly the long-run stock-market average. Shown in today’s money.
               </p>
             </div>
           </div>
@@ -203,7 +221,7 @@ function AlternativeCard({
       <div className="mt-1 font-mono text-base font-semibold text-cyan-300">
         {count >= 0.1 ? `${count.toFixed(count >= 10 ? 0 : 1)}×` : '< 0.1×'}
       </div>
-      <div className="text-[10px] text-zinc-600">{formatCurrency(alternative.cost, currency)} each</div>
+      <div className="text-[10px] text-zinc-600">{currency === 'USD' ? '' : '≈ '}{formatCurrency(alternative.cost, currency)} each</div>
     </div>
   );
 }
@@ -217,8 +235,10 @@ function InvestmentProjection({
   yearlyContribution: number;
   currency: CurrencyCode;
 }) {
-  const rate = 0.07;
-  const futureValue = yearlyContribution * ((Math.pow(1 + rate, years) - 1) / rate);
+  // Monthly contributions compounding monthly at the equivalent of the annual real return.
+  const monthlyRate = Math.pow(1 + REAL_INVESTMENT_RETURN, 1 / 12) - 1;
+  const months = years * 12;
+  const futureValue = (yearlyContribution / 12) * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
   const totalContributed = yearlyContribution * years;
   const gains = futureValue - totalContributed;
 

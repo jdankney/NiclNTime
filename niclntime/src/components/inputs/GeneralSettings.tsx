@@ -1,15 +1,13 @@
 'use client';
 
-import { UserInputs, CurrencyCode, CURRENCY_OPTIONS, CURRENCIES } from '@/types';
+import { UserInputs, CurrencyCode, CURRENCY_OPTIONS, CURRENCIES, LIFE_EXPECTANCY_YEARS } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { NumberInput, Slider, Select } from '@/components/ui/Input';
+import { Slider, Select } from '@/components/ui/Input';
 import { Icon } from '@/components/ui/Icon';
 
 interface GeneralSettingsProps {
-  value: Pick<UserInputs, 'costPerVapeMl' | 'costPerPack' | 'yearsOfUse' | 'age' | 'currency'>;
-  onChange: (
-    value: Pick<UserInputs, 'costPerVapeMl' | 'costPerPack' | 'yearsOfUse' | 'age' | 'currency'>
-  ) => void;
+  value: Pick<UserInputs, 'yearsOfUse' | 'age' | 'currency'>;
+  onChange: (value: Pick<UserInputs, 'yearsOfUse' | 'age' | 'currency'>) => void;
 }
 
 export function GeneralSettings({ value, onChange }: GeneralSettingsProps) {
@@ -24,8 +22,8 @@ export function GeneralSettings({ value, onChange }: GeneralSettingsProps) {
             <Icon name="settings" size={20} />
           </div>
           <div>
-            <CardTitle>Settings</CardTitle>
-            <CardDescription>Costs, time horizon and currency</CardDescription>
+            <CardTitle>About you</CardTitle>
+            <CardDescription>Age, years of use and currency</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -35,29 +33,8 @@ export function GeneralSettings({ value, onChange }: GeneralSettingsProps) {
           value={value.currency}
           onChange={(event) => update({ currency: event.target.value as CurrencyCode })}
           options={CURRENCY_OPTIONS}
-          helperText={`Prices are entered in ${currency.label} (${currency.symbol}).`}
+          helperText={`Enter prices in ${currency.label} (${currency.symbol}).`}
         />
-
-        <div className="grid grid-cols-1 gap-5">
-          <NumberInput
-            label={`E-liquid cost (${currency.symbol}/mL)`}
-            value={value.costPerVapeMl}
-            onChange={(event) => update({ costPerVapeMl: Number(event.target.value) || 0 })}
-            min={0}
-            max={10000}
-            step={0.01}
-            helperText="Bottle price ÷ milliliters in the bottle."
-          />
-          <NumberInput
-            label={`Cigarette pack cost (${currency.symbol})`}
-            value={value.costPerPack}
-            onChange={(event) => update({ costPerPack: Number(event.target.value) || 0 })}
-            min={0}
-            max={100000}
-            step={0.5}
-            helperText="Price of one standard pack of 20 cigarettes."
-          />
-        </div>
 
         <div className="space-y-5 border-t border-zinc-800/80 pt-5">
           <Slider
@@ -67,7 +44,7 @@ export function GeneralSettings({ value, onChange }: GeneralSettingsProps) {
             value={value.yearsOfUse}
             onChange={(yearsOfUse) => update({ yearsOfUse })}
             formatValue={(years) => `${years} ${years === 1 ? 'year' : 'years'}`}
-            helperText="Used for duration-related risk and life-lost estimates."
+            helperText="Counting all nicotine products. Used for duration risk and life expectancy."
           />
           <Slider
             label="Current age"
@@ -76,7 +53,7 @@ export function GeneralSettings({ value, onChange }: GeneralSettingsProps) {
             value={value.age}
             onChange={(age) => update({ age })}
             formatValue={(age) => `${age} yrs`}
-            helperText="Lifetime cost projects current spending until age 80."
+            helperText={`Lifetime cost projects your current spending until age ${LIFE_EXPECTANCY_YEARS}. Under 25s get extra weighting because the brain is still developing.`}
           />
         </div>
 
