@@ -2,7 +2,7 @@
 
 > **A private, browser-based tool that turns vapes (Geek Bar, Raz, Elf Bar, JUUL…), cigarettes and nicotine pouches (ZYN, on!, VELO) into a clear picture of nicotine intake, money spent and time lost.**
 
-[![CI](https://github.com/j4mes/NiclNTime/actions/workflows/ci.yml/badge.svg)](https://github.com/j4mes/NiclNTime/actions/workflows/ci.yml)
+[![CI](https://github.com/jdankney/NiclNTime/actions/workflows/ci.yml/badge.svg)](https://github.com/jdankney/NiclNTime/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/license-MIT-22d3ee.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org)
@@ -76,7 +76,7 @@ The app is fully responsive and works on mobile, tablet and desktop. Screenshots
 ### Run locally
 
 ```bash
-git clone https://github.com/j4mes/NiclNTime.git
+git clone https://github.com/jdankney/NiclNTime.git
 cd NiclNTime
 
 # Install app dependencies
@@ -257,7 +257,7 @@ Please keep the tone supportive and non-judgmental. This project is for awarenes
 
 ## License
 
-[MIT](LICENSE) © NiclNTime contributors.
+[MIT](LICENSE) © James Ankney.
 
 ---
 
