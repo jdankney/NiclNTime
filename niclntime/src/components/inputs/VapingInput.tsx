@@ -8,10 +8,13 @@ import {
   DEVICE_TYPES,
   NICOTINE_PER_CIGARETTE_EQUIVALENT_MG,
   NICOTINE_STRENGTH_PRESETS,
+  NICOTINE_TYPE_INFO,
+  VAPE_NICOTINE_ABSORPTION,
   VAPE_NICOTINE_ABSORPTION_RANGE,
   VAPE_PRODUCTS,
   type CurrencyCode,
   type DeviceType,
+  type NicotineType,
   type VapingInput,
 } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
@@ -45,6 +48,11 @@ const DEFAULT_DAYS: Record<DeviceType, number> = {
 };
 
 const DAY_CHIPS = [1, 2, 3, 5, 7, 14];
+
+const NICOTINE_TYPES: NicotineType[] = ['salt', 'freebase'];
+
+/** Freebase above this strength is unusually harsh — usually a sign the liquid is actually a salt. */
+const FREEBASE_HARSH_MG_PER_ML = 20;
 
 const round = (value: number, decimals: number) => {
   const factor = Math.pow(10, decimals);
@@ -90,6 +98,7 @@ export function VapingInputForm({
       productId: next.id,
       deviceType: next.deviceType,
       nicotineConcentration: next.nicotineMgPerMl,
+      nicotineType: next.nicotineType,
       unitSizeMl: next.unitSizeMl,
       volumePerDay,
       hitsPerDay: estimatePuffsPerDay(volumePerDay, next.deviceType),
@@ -270,12 +279,41 @@ export function VapingInputForm({
           <LiveStat value={formatNumber(current.hitsPerDay)} label="puffs / day (est.)" />
         </div>
 
+        <div className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 p-3.5">
+          <span
+            className={`mt-0.5 shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${
+              current.nicotineType === 'salt'
+                ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+                : 'border-zinc-600 bg-zinc-800 text-zinc-300'
+            }`}
+          >
+            {NICOTINE_TYPE_INFO[current.nicotineType].short}
+          </span>
+          <p className="text-[11px] leading-relaxed text-zinc-400">
+            {current.nicotineType === 'salt' ? (
+              <>
+                <span className="text-zinc-200">Nicotine salt</span> hits faster with a higher, cigarette-like
+                peak, which makes it easier to get hooked on. Salts are also what makes{' '}
+                {formatFlexible(mgPerMlToPercent(current.nicotineConcentration), 1)}% strengths smooth enough to
+                vape — and strength is the biggest driver of how much nicotine you get.
+              </>
+            ) : (
+              <>
+                <span className="text-zinc-200">Freebase</span> nicotine is harsher, so it’s usually vaped at low
+                strengths. It reaches the blood more slowly and peaks lower than a nicotine salt at the same
+                strength.
+              </>
+            )}{' '}
+            <span className="text-zinc-500">Change it under “Fine-tune”.</span>
+          </p>
+        </div>
+
         {/* Fine-tune */}
         <details className="group rounded-xl border border-zinc-800 bg-zinc-950/30" open={!product}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-inset rounded-xl">
             <span className="flex items-center gap-2">
               <Icon name="settings" size={15} className="text-cyan-400" />
-              Fine-tune strength, size and puffs
+              Fine-tune nicotine type, strength, size and puffs
             </span>
             <Icon name="chevron-down" size={16} className="text-zinc-500 transition-transform group-open:rotate-180" />
           </summary>
@@ -292,6 +330,7 @@ export function VapingInputForm({
                       onClick={() =>
                         update({
                           deviceType: device,
+                          nicotineType: DEVICE_PROFILES[device].defaultNicotineType,
                           productId: CUSTOM_PRODUCT_ID,
                           hitsPerDay: estimatePuffsPerDay(current.volumePerDay, device),
                         })
@@ -310,6 +349,44 @@ export function VapingInputForm({
                 })}
               </div>
               <p className="mt-2 text-[11px] text-zinc-600">{profile.description}</p>
+            </div>
+
+            <div>
+              <h4 className="mb-2 text-sm font-medium text-zinc-200">Nicotine type</h4>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="group" aria-label="Nicotine type">
+                {NICOTINE_TYPES.map((type) => {
+                  const selected = current.nicotineType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => update({ nicotineType: type, productId: CUSTOM_PRODUCT_ID })}
+                      aria-pressed={selected}
+                      className={`rounded-xl border p-3 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 ${
+                        selected
+                          ? 'border-cyan-500/60 bg-cyan-500/10'
+                          : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60'
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className={`text-sm font-medium ${selected ? 'text-cyan-200' : 'text-zinc-200'}`}>
+                          {NICOTINE_TYPE_INFO[type].label}
+                        </span>
+                        <span className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">
+                          ~{Math.round(VAPE_NICOTINE_ABSORPTION[type] * 100)}% absorbed
+                        </span>
+                      </span>
+                      <span className="mt-1 block text-[11px] leading-snug text-zinc-500">
+                        {NICOTINE_TYPE_INFO[type].description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-zinc-600">
+                Not sure? Look for “salt”, “nic salt” or “benzoate” on the box. If it’s a disposable or a pre-filled
+                pod, it’s almost certainly a salt.
+              </p>
             </div>
 
             <div>
@@ -341,6 +418,13 @@ export function VapingInputForm({
                   </button>
                 ))}
               </div>
+              {current.nicotineType === 'freebase' && current.nicotineConcentration > FREEBASE_HARSH_MG_PER_ML && (
+                <p className="mt-2 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.06] p-2.5 text-[11px] leading-relaxed text-amber-100/80">
+                  <Icon name="alert" size={14} className="mt-0.5 shrink-0 text-amber-300" />
+                  Freebase above {FREEBASE_HARSH_MG_PER_ML} mg/mL is very harsh and uncommon. Double-check the label —
+                  this strength is usually a nicotine salt.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">

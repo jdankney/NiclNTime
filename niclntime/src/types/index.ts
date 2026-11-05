@@ -16,6 +16,15 @@
  */
 export type DeviceType = 'disposable' | 'prefilled-pod' | 'refillable-pod' | 'sub-ohm';
 
+/**
+ * How the nicotine in the e-liquid is prepared.
+ * - `salt`: nicotine mixed with a mild acid (e.g. benzoic acid). Smooth enough
+ *   to sell at 20–59 mg/mL. Used in almost all disposables and pre-filled pods.
+ * - `freebase`: the original form. Harsh above ~12–20 mg/mL, so it is usually
+ *   sold at 3–12 mg/mL for tanks.
+ */
+export type NicotineType = 'salt' | 'freebase';
+
 export interface DeviceProfile {
   label: string;
   shortLabel: string;
@@ -31,6 +40,8 @@ export interface DeviceProfile {
   puffsPerMl: number;
   /** What the user buys/replaces: shown as "one {unit} lasts …". */
   unit: string;
+  /** Nicotine type these devices normally use. */
+  defaultNicotineType: NicotineType;
 }
 
 export const DEVICE_PROFILES: Record<DeviceType, DeviceProfile> = {
@@ -41,6 +52,7 @@ export const DEVICE_PROFILES: Record<DeviceType, DeviceProfile> = {
     puffVolumeMl: 60,
     puffsPerMl: 200,
     unit: 'device',
+    defaultNicotineType: 'salt',
   },
   'prefilled-pod': {
     label: 'Pre-filled pod system',
@@ -49,6 +61,7 @@ export const DEVICE_PROFILES: Record<DeviceType, DeviceProfile> = {
     puffVolumeMl: 55,
     puffsPerMl: 250,
     unit: 'pod',
+    defaultNicotineType: 'salt',
   },
   'refillable-pod': {
     label: 'Refillable pod / AIO',
@@ -57,6 +70,7 @@ export const DEVICE_PROFILES: Record<DeviceType, DeviceProfile> = {
     puffVolumeMl: 70,
     puffsPerMl: 150,
     unit: 'bottle',
+    defaultNicotineType: 'salt',
   },
   'sub-ohm': {
     label: 'Sub-ohm tank / mod',
@@ -65,6 +79,7 @@ export const DEVICE_PROFILES: Record<DeviceType, DeviceProfile> = {
     puffVolumeMl: 200,
     puffsPerMl: 40,
     unit: 'bottle',
+    defaultNicotineType: 'freebase',
   },
 };
 
@@ -74,11 +89,33 @@ export const DEVICE_TYPES = Object.keys(DEVICE_PROFILES) as DeviceType[];
  * Share of the nicotine in the e-liquid you use up that reaches your
  * bloodstream. Lab studies find ~94% of *inhaled* nicotine is retained
  * (St Helen et al., Addiction 2016), but some nicotine never reaches the lungs
- * (condensation inside the device, mouth-held puffs, exhaled aerosol). Real
- * intake varies widely between people and devices, so a single central
- * estimate is used and the uncertainty is shown in the methodology.
+ * (condensation inside the device, mouth-held puffs, exhaled aerosol).
+ *
+ * Nicotine salts are absorbed faster, with a higher, more cigarette-like peak,
+ * and at the same strength give somewhat higher uptake than freebase (e.g.
+ * Sci Rep 2020, PMC7686355). The size of the difference in *total* daily
+ * absorption isn't well established, so only a modest ±5-point adjustment
+ * around the 50% central estimate is applied. Strength matters far more.
  */
-export const VAPE_NICOTINE_ABSORPTION = 0.5;
+export const VAPE_NICOTINE_ABSORPTION: Record<NicotineType, number> = {
+  salt: 0.55,
+  freebase: 0.45,
+};
+
+export const NICOTINE_TYPE_INFO: Record<NicotineType, { label: string; short: string; description: string }> = {
+  salt: {
+    label: 'Nicotine salt',
+    short: 'Salt',
+    description:
+      'Smooth at high strengths (20–59 mg/mL). Hits faster with a higher, cigarette-like peak. Used in nearly all disposables and pods.',
+  },
+  freebase: {
+    label: 'Freebase',
+    short: 'Freebase',
+    description:
+      'Harsher, so usually 3–12 mg/mL in tanks. Nicotine builds up more slowly and peaks lower.',
+  },
+};
 /** Plausible spread around the central estimate, shown next to vaping results. */
 export const VAPE_NICOTINE_ABSORPTION_RANGE: [number, number] = [0.3, 0.7];
 
@@ -95,6 +132,7 @@ export interface VapeProduct {
   unitSizeMl: number;
   /** Nicotine strength in mg/mL. "5%" on US labels ≈ 50 mg/mL. */
   nicotineMgPerMl: number;
+  nicotineType: NicotineType;
   /** Manufacturer puff rating, if any. */
   ratedPuffs?: number;
   /** Rough US retail price per unit (USD), used only when the currency is USD. */
@@ -113,6 +151,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'disposable',
     unitSizeMl: 16,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     ratedPuffs: 15000,
     typicalPriceUsd: 20,
     market: 'US',
@@ -124,6 +163,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'disposable',
     unitSizeMl: 18,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     ratedPuffs: 25000,
     typicalPriceUsd: 25,
     market: 'US',
@@ -135,6 +175,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'disposable',
     unitSizeMl: 16,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     ratedPuffs: 25000,
     typicalPriceUsd: 22,
     market: 'US',
@@ -146,6 +187,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'disposable',
     unitSizeMl: 13,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     ratedPuffs: 5000,
     typicalPriceUsd: 15,
     market: 'US',
@@ -157,6 +199,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'disposable',
     unitSizeMl: 13.5,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     ratedPuffs: 5000,
     typicalPriceUsd: 15,
     market: 'US',
@@ -168,6 +211,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'disposable',
     unitSizeMl: 6,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     ratedPuffs: 2000,
     typicalPriceUsd: 12,
     market: 'US',
@@ -179,6 +223,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'prefilled-pod',
     unitSizeMl: 2,
     nicotineMgPerMl: 20,
+    nicotineType: 'salt',
     ratedPuffs: 600,
     market: 'UK/EU',
   },
@@ -189,6 +234,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'prefilled-pod',
     unitSizeMl: 0.7,
     nicotineMgPerMl: 59,
+    nicotineType: 'salt',
     ratedPuffs: 200,
     typicalPriceUsd: 6.5,
     market: 'US',
@@ -200,6 +246,7 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'prefilled-pod',
     unitSizeMl: 1.8,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     typicalPriceUsd: 6,
     market: 'US',
   },
@@ -210,26 +257,29 @@ export const VAPE_PRODUCTS: VapeProduct[] = [
     deviceType: 'prefilled-pod',
     unitSizeMl: 1.9,
     nicotineMgPerMl: 50,
+    nicotineType: 'salt',
     typicalPriceUsd: 6.5,
     market: 'US',
   },
   {
     id: 'salt-bottle',
     name: 'Refillable pod + nic salt',
-    detail: '30 mL bottle · 20–50 mg/mL',
+    detail: '30 mL bottle · salt 20–50 mg/mL',
     deviceType: 'refillable-pod',
     unitSizeMl: 30,
     nicotineMgPerMl: 35,
+    nicotineType: 'salt',
     typicalPriceUsd: 16,
     market: 'Global',
   },
   {
     id: 'freebase-bottle',
     name: 'Sub-ohm tank + freebase',
-    detail: '100 mL bottle · 3–6 mg/mL',
+    detail: '100 mL bottle · freebase 3–6 mg/mL',
     deviceType: 'sub-ohm',
     unitSizeMl: 100,
     nicotineMgPerMl: 3,
+    nicotineType: 'freebase',
     typicalPriceUsd: 22,
     market: 'Global',
   },
@@ -327,6 +377,7 @@ export interface VapingInput {
   productId: string;
   deviceType: DeviceType;
   nicotineConcentration: number; // mg/mL
+  nicotineType: NicotineType;
   /** Size of one device/pod/bottle in mL. Used to convert "lasts N days" and price per unit. */
   unitSizeMl: number;
   volumePerDay: number; // mL
@@ -577,6 +628,7 @@ export const DEFAULT_VAPING: VapingInput = {
   productId: 'geek-bar-pulse',
   deviceType: 'disposable',
   nicotineConcentration: 50,
+  nicotineType: 'salt',
   unitSizeMl: 16,
   volumePerDay: 16 / 7,
   hitsPerDay: Math.round((16 / 7) * DEVICE_PROFILES.disposable.puffsPerMl),

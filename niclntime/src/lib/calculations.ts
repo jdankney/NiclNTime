@@ -14,6 +14,7 @@ import type {
   PouchInput,
   WhatIfScenario,
   DeviceType,
+  NicotineType,
   CigaretteType,
   CurrencyCode,
   RiskFactors,
@@ -92,10 +93,15 @@ export function normalizeInputs(inputs: Partial<UserInputs> | null | undefined):
   let vaping: VapingInput | null = null;
   if (rawVaping && typeof rawVaping === 'object' && Object.keys(rawVaping).length > 0) {
     const deviceType = LEGACY_DEVICE_TYPES[String(rawVaping.deviceType)] ?? 'disposable';
+    const nicotineType: NicotineType =
+      rawVaping.nicotineType === 'salt' || rawVaping.nicotineType === 'freebase'
+        ? rawVaping.nicotineType
+        : DEVICE_PROFILES[deviceType].defaultNicotineType;
     vaping = {
       productId: typeof rawVaping.productId === 'string' ? rawVaping.productId : CUSTOM_PRODUCT_ID,
       deviceType,
       nicotineConcentration: clamp(num(rawVaping.nicotineConcentration), 0, 100),
+      nicotineType,
       unitSizeMl: clamp(num(rawVaping.unitSizeMl, DEFAULT_UNIT_SIZE_ML[deviceType]), 0.1, 1000),
       volumePerDay: clamp(num(rawVaping.volumePerDay), 0, 100),
       hitsPerDay: Math.round(clamp(num(rawVaping.hitsPerDay), 0, 5000)),
@@ -154,7 +160,7 @@ export function mgPerMlToPercent(mgPerMl: number): number {
 }
 
 export function vapeNicotineAbsorbedMg(vaping: VapingInput): number {
-  return vaping.volumePerDay * vaping.nicotineConcentration * VAPE_NICOTINE_ABSORPTION;
+  return vaping.volumePerDay * vaping.nicotineConcentration * VAPE_NICOTINE_ABSORPTION[vaping.nicotineType];
 }
 
 export function pouchNicotineAbsorbedMg(pouches: PouchInput): number {
