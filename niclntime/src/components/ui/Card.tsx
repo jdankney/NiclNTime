@@ -6,9 +6,10 @@ interface CardProps {
   children: ReactNode;
   className?: string;
   variant?: 'default' | 'elevated' | 'outlined' | 'ghost';
+  id?: string;
 }
 
-export function Card({ children, className = '', variant = 'default' }: CardProps) {
+export function Card({ children, className = '', variant = 'default', id }: CardProps) {
   const baseStyles = 'relative rounded-2xl transition-all duration-300';
   const variants = {
     default:
@@ -20,7 +21,7 @@ export function Card({ children, className = '', variant = 'default' }: CardProp
   };
 
   return (
-    <div className={`${baseStyles} ${variants[variant]} ${className}`}>
+    <div id={id} className={`${baseStyles} ${variants[variant]} ${className}`}>
       {children}
     </div>
   );

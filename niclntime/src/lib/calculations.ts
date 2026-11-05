@@ -240,7 +240,7 @@ function calculateRiskScore(input: RiskInputs): {
   }
 
   // Smoking risk rises steeply at low consumption: one cigarette a day carries
-  // roughly 40–50% of the heart-disease excess risk of 20 a day (Hackshaw et
+  // roughly 30–50% of the excess heart-disease and stroke risk of 20 a day (Hackshaw et
   // al., BMJ 2018). A steep power curve reflects "no safe level".
   const tarAdjustedCigarettes = input.cigarettesPerDay * (input.tarPerCigaretteMg / CIGARETTE_TAR_MG.regular);
   const chemicals =

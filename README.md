@@ -51,6 +51,11 @@ The app is fully responsive and works on mobile, tablet and desktop. Screenshots
 - Animated timeline and life expectancy lost to smoking.
 - Live counters so the numbers feel tangible.
 
+### Learn the science
+- **"The science" tab** — what nicotine does to the brain (reward system, tolerance, withdrawal), heart, metabolism, pregnancy and lungs, and where smoking, vaping and pouches differ.
+- **Under-25 section** — why a still-developing brain is more vulnerable, with a shortcut from the dashboard for younger users.
+- **Every point labelled by evidence strength** (Established, Strong evidence, Association, Animal & lab) with numbered links to peer-reviewed studies and Surgeon General / National Academies reports.
+
 ### Built to be usable
 - Fully responsive layout with mobile navigation.
 - Dark, high-contrast medical/impact aesthetic.
@@ -122,6 +127,7 @@ NiclNTime/
     │   ├── components/
     │   │   ├── Welcome.tsx     # Landing / empty state
     │   │   ├── Methodology.tsx # Methodology + sources accordion
+    │   │   ├── Science.tsx     # "The science" tab: evidence-graded facts + sources
     │   │   ├── inputs/         # Vaping, cigarette and general settings forms
     │   │   ├── visualizers/    # Risk gauge, lungs, wallet, clock, summary cards
     │   │   └── ui/             # Card, Input, Select, Slider, Toggle, Icon
