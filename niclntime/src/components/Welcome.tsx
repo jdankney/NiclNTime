@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 interface WelcomeProps {
   onStart: () => void;
   onDemo: () => void;
+  onLearn: () => void;
 }
 
 const FEATURES = [
@@ -35,7 +36,7 @@ const FEATURES = [
   },
 ];
 
-export function Welcome({ onStart, onDemo }: WelcomeProps) {
+export function Welcome({ onStart, onDemo, onLearn }: WelcomeProps) {
   return (
     <div className="animate-fade-in">
       <section className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/40 px-5 py-12 sm:px-10 sm:py-16 lg:px-14">
@@ -83,6 +84,15 @@ export function Welcome({ onStart, onDemo }: WelcomeProps) {
               Try a sample report
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={onLearn}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-zinc-400 underline decoration-zinc-700 underline-offset-4 transition-colors hover:text-cyan-300 hover:decoration-cyan-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+          >
+            <Icon name="info" size={14} />
+            Or just learn what nicotine does to your brain and body
+          </button>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-zinc-500">
             <span className="inline-flex items-center gap-1.5">

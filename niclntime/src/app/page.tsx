@@ -41,15 +41,17 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Welcome } from '@/components/Welcome';
 import { Methodology } from '@/components/Methodology';
+import { Science } from '@/components/Science';
 
-type Tab = 'inputs' | 'dashboard' | 'whatif';
+type Tab = 'inputs' | 'dashboard' | 'whatif' | 'science';
 
 const STORAGE_KEY = 'niclntime:inputs:v2';
 
-const TABS: Array<{ id: Tab; label: string; icon: IconName }> = [
+const TABS: Array<{ id: Tab; label: string; mobileLabel?: string; icon: IconName }> = [
   { id: 'inputs', label: 'Inputs', icon: 'settings' },
   { id: 'dashboard', label: 'Dashboard', icon: 'activity' },
   { id: 'whatif', label: 'What if?', icon: 'sparkles' },
+  { id: 'science', label: 'The science', mobileLabel: 'Science', icon: 'info' },
 ];
 
 export default function Dashboard() {
@@ -58,6 +60,7 @@ export default function Dashboard() {
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [scienceFocus, setScienceFocus] = useState<'under-25' | null>(null);
 
   const metrics = useMemo(() => calculateMetrics(inputs), [inputs]);
   const whatIfScenarios = useMemo(() => generateWhatIfScenarios(inputs), [inputs]);
@@ -106,6 +109,12 @@ export default function Dashboard() {
     const timer = window.setTimeout(() => setToast(null), 3200);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  const openScience = (focus: 'under-25' | null = null) => {
+    setScienceFocus(focus);
+    setActiveTab('science');
+    if (!focus) window.scrollTo({ top: 0 });
+  };
 
   const updateInputs = (patch: Partial<UserInputs>) => {
     setInputs((previous) => ({ ...previous, ...patch }));
@@ -245,7 +254,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <nav className="flex gap-1 overflow-x-auto pb-2 md:hidden" aria-label="Mobile navigation">
+          <nav className="flex gap-0.5 overflow-x-auto pb-2 md:hidden" aria-label="Mobile navigation">
             {TABS.map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -254,12 +263,12 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     active ? 'bg-zinc-800 text-cyan-300' : 'text-zinc-500 hover:text-zinc-200'
                   }`}
                 >
                   <Icon name={tab.icon} size={14} />
-                  {tab.label}
+                  {tab.mobileLabel ?? tab.label}
                 </button>
               );
             })}
@@ -378,7 +387,7 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'dashboard' && !hasAnyInput && (
-          <Welcome onStart={() => setActiveTab('inputs')} onDemo={loadDemo} />
+          <Welcome onStart={() => setActiveTab('inputs')} onDemo={loadDemo} onLearn={() => openScience()} />
         )}
 
         {activeTab === 'dashboard' && hasAnyInput && (
@@ -399,6 +408,26 @@ export default function Dashboard() {
               }
             />
 
+            {inputs.age < 25 && (
+              <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <Icon name="alert" size={18} className="mt-0.5 shrink-0 text-amber-300" />
+                  <p className="text-xs leading-relaxed text-amber-100/80">
+                    <strong className="text-amber-200">You’re under 25.</strong> Your brain is still developing,
+                    which makes nicotine addiction set in faster and its effects last longer.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openScience('under-25')}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-2 text-xs font-medium text-amber-100 transition-colors hover:bg-amber-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+                >
+                  What it means for you
+                  <Icon name="arrow-right" size={14} />
+                </button>
+              </div>
+            )}
+
             <SummaryCards metrics={metrics} currency={currency} />
 
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -415,7 +444,11 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'whatif' && !hasAnyInput && (
-          <Welcome onStart={() => setActiveTab('inputs')} onDemo={loadDemo} />
+          <Welcome onStart={() => setActiveTab('inputs')} onDemo={loadDemo} onLearn={() => openScience()} />
+        )}
+
+        {activeTab === 'science' && (
+          <Science focus={scienceFocus} onFocusHandled={() => setScienceFocus(null)} />
         )}
 
         {activeTab === 'whatif' && hasAnyInput && (

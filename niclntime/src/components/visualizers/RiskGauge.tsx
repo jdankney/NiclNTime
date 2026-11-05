@@ -177,8 +177,8 @@ export function RiskGauge({ metrics, currency }: RiskGaugeProps) {
               </span>
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-              There’s no safe level of smoking: even one cigarette a day carries around half the heart-disease
-              risk of a pack a day.
+              There’s no safe level of smoking: even one cigarette a day carries roughly a third to half of the
+              extra heart-disease risk of a pack a day.
             </p>
           </div>
         )}
